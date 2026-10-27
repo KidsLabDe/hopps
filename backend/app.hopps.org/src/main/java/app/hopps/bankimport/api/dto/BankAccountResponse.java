@@ -1,6 +1,7 @@
 package app.hopps.bankimport.api.dto;
 
 import app.hopps.bankimport.domain.BankAccount;
+import app.hopps.bankimport.domain.BankAccountType;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -15,7 +16,9 @@ public record BankAccountResponse(
         Long bommelId,
         String bommelName,
         String name,
+        BankAccountType type,
         String iban,
+        String paypalEmail,
         String bic,
         String bankName,
         String accountHolder,
@@ -45,7 +48,9 @@ public record BankAccountResponse(
                 account.getBommel() != null ? account.getBommel().id : null,
                 account.getBommel() != null ? account.getBommel().getName() : null,
                 account.getName(),
+                account.getAccountType(),
                 account.getIban(),
+                account.getPaypalEmail(),
                 account.getBic(),
                 account.getBankName(),
                 account.getAccountHolder(),

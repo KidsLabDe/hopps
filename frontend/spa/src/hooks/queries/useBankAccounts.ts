@@ -6,6 +6,7 @@ import {
     BankCsvSchemaUpdateRequest,
     BankCsvColumnMappingDto,
     AmountStrategy,
+    BankAccountType,
     BankFieldType,
     MatchRequest,
     MatchAmountRequest,
@@ -586,7 +587,10 @@ export function useBankTransactionSearch(search: string, enabled: boolean) {
 
 export interface IBankAccountCreateRequest {
     name: string;
-    iban: string;
+    /** BANK (default) needs an IBAN, PAYPAL the PayPal e-mail address instead. */
+    type?: BankAccountType;
+    iban?: string;
+    paypalEmail?: string;
     bic?: string;
     bankName?: string;
     accountHolder?: string;
@@ -602,6 +606,7 @@ export interface IBankAccountCreateRequest {
 export interface IBankAccountUpdateRequest {
     name?: string;
     iban?: string;
+    paypalEmail?: string;
     bic?: string;
     bankName?: string;
     accountHolder?: string;

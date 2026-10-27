@@ -112,6 +112,8 @@ export function ImportWizard({ accountId, onClose, onViewTransactions }: ImportW
     // sees the sample; the backend checks the whole file again when the import starts.
     const fileCurrencies = previewCurrencies(preview, selectedSchema ?? selectedTemplate);
     const previewCurrencyMismatch = isCurrencyMismatch(fileCurrencies, account?.currency);
+    // A PayPal export only goes into a PayPal account, a bank statement only into a bank account (checked again on import).
+    const accountTypeMismatch = !!preview && !!account && (preview.fileType === 'PAYPAL') !== (account.type === 'PAYPAL');
     const detectionSucceeded = detection != null && detection.type !== 'NONE';
 
     // Trigger preview automatically on drop
@@ -371,6 +373,15 @@ export function ImportWizard({ accountId, onClose, onViewTransactions }: ImportW
                     })()}
 
                 {/* The preview already shows amounts in another currency than the account */}
+                {accountTypeMismatch && (
+                    <div role="alert" className="flex items-start gap-2 text-sm text-destructive bg-destructive/10 rounded-xl p-3">
+                        <XCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                        <span>
+                            {account?.type === 'PAYPAL' ? t('bankImport.check.bankFileIntoPaypalAccount') : t('bankImport.check.paypalFileIntoBankAccount')}
+                        </span>
+                    </div>
+                )}
+
                 {previewCurrencyMismatch && (
                     <div role="alert" className="flex items-start gap-2 text-sm text-destructive bg-destructive/10 rounded-xl p-3">
                         <XCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
@@ -410,7 +421,10 @@ export function ImportWizard({ accountId, onClose, onViewTransactions }: ImportW
                         {t('common.goBack')}
                     </Button>
                     <div className="flex-1" />
-                    <Button onClick={() => handleImport()} disabled={(!isSchemaless && !schemaId) || isDetecting || previewCurrencyMismatch}>
+                    <Button
+                        onClick={() => handleImport()}
+                        disabled={(!isSchemaless && !schemaId) || isDetecting || previewCurrencyMismatch || accountTypeMismatch}
+                    >
                         {t('bankImport.wizard.importBtn', { count: totalRows })}
                     </Button>
                 </div>

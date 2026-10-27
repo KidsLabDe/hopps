@@ -54,4 +54,14 @@ public class BankAccountRepository implements PanacheRepository<BankAccount> {
         return count("organization.id = ?1 and iban = ?2 and archived = false and id <> ?3", orgId, iban,
                 excludeId) > 0;
     }
+
+    /** Like {@link #existsByIban}, for the e-mail address that identifies a PayPal account. */
+    public boolean existsByPaypalEmail(String paypalEmail, Long excludeId) {
+        Long orgId = organizationContext.getCurrentOrganizationId();
+        if (excludeId == null) {
+            return count("organization.id = ?1 and paypalEmail = ?2 and archived = false", orgId, paypalEmail) > 0;
+        }
+        return count("organization.id = ?1 and paypalEmail = ?2 and archived = false and id <> ?3", orgId,
+                paypalEmail, excludeId) > 0;
+    }
 }

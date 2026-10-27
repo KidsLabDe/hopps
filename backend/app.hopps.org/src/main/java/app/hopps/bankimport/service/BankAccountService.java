@@ -3,6 +3,7 @@ package app.hopps.bankimport.service;
 import app.hopps.bankimport.api.dto.BankAccountCreateRequest;
 import app.hopps.bankimport.api.dto.BankAccountUpdateRequest;
 import app.hopps.bankimport.domain.BankAccount;
+import app.hopps.bankimport.domain.BankAccountType;
 import app.hopps.bankimport.domain.BankCsvSchema;
 import app.hopps.bankimport.repository.BankAccountRepository;
 import app.hopps.bankimport.repository.BankTransactionRepository;
@@ -20,10 +21,12 @@ import jakarta.ws.rs.NotFoundException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
- * Business logic for bank accounts: org-scoping, default-bommel resolution, IBAN validation, and soft-delete.
+ * Business logic for bank accounts: org-scoping, default-bommel resolution, IBAN or PayPal e-mail validation (by
+ * {@link BankAccountType}), and soft-delete.
  */
 @ApplicationScoped
 public class BankAccountService {
@@ -70,10 +73,27 @@ public class BankAccountService {
     @Transactional
     public BankAccount create(BankAccountCreateRequest request) {
         Organization organization = requireOrganization();
-        String normalizedIban = normalizeIban(request.iban());
-        validateIban(normalizedIban);
-        if (bankAccountRepository.existsByIban(normalizedIban, null)) {
-            throw new BadRequestException("A bank account with this IBAN already exists in this organization");
+        BankAccountType type = request.type() != null ? request.type() : BankAccountType.BANK;
+        String normalizedIban = null;
+        String normalizedPaypalEmail = null;
+        if (type == BankAccountType.PAYPAL) {
+            if (request.iban() != null && !request.iban().isBlank()) {
+                throw new BadRequestException("A PayPal account has no IBAN");
+            }
+            normalizedPaypalEmail = normalizePaypalEmail(request.paypalEmail());
+            if (bankAccountRepository.existsByPaypalEmail(normalizedPaypalEmail, null)) {
+                throw new BadRequestException("A PayPal account with this e-mail address already exists in this "
+                        + "organization");
+            }
+        } else {
+            if (request.iban() == null) {
+                throw new BadRequestException("A bank account needs an IBAN");
+            }
+            normalizedIban = normalizeIban(request.iban());
+            validateIban(normalizedIban);
+            if (bankAccountRepository.existsByIban(normalizedIban, null)) {
+                throw new BadRequestException("A bank account with this IBAN already exists in this organization");
+            }
         }
         Bommel bommel = resolveBommel(request.bommelId(), organization);
         BankCsvSchema defaultSchema = resolveDefaultSchema(request.defaultSchemaId());
@@ -82,7 +102,9 @@ public class BankAccountService {
         account.setOrganization(organization);
         account.setBommel(bommel);
         account.setName(request.name());
+        account.setAccountType(type);
         account.setIban(normalizedIban);
+        account.setPaypalEmail(normalizedPaypalEmail);
         account.setBic(request.bic());
         account.setBankName(request.bankName());
         account.setAccountHolder(request.accountHolder());
@@ -91,7 +113,9 @@ public class BankAccountService {
         if (request.currency() != null && !request.currency().equals(currency)) {
             throw new BadRequestException("Bank accounts are kept in the organization's currency " + currency);
         }
-        validateIbanFitsCurrency(normalizedIban, currency);
+        if (normalizedIban != null) {
+            validateIbanFitsCurrency(normalizedIban, currency);
+        }
         account.setCurrency(currency);
         account.setOpeningBalance(request.openingBalance());
         account.setOpeningBalanceDate(request.openingBalanceDate());
@@ -109,7 +133,22 @@ public class BankAccountService {
     public BankAccount update(Long id, BankAccountUpdateRequest request) {
         BankAccount account = get(id);
 
-        if (request.iban() != null) {
+        if (account.isPaypal()) {
+            if (request.iban() != null && !request.iban().isBlank()) {
+                throw new BadRequestException("A PayPal account has no IBAN");
+            }
+            if (request.paypalEmail() != null) {
+                String normalizedPaypalEmail = normalizePaypalEmail(request.paypalEmail());
+                if (!normalizedPaypalEmail.equals(account.getPaypalEmail())
+                        && bankAccountRepository.existsByPaypalEmail(normalizedPaypalEmail, id)) {
+                    throw new BadRequestException("A PayPal account with this e-mail address already exists in this "
+                            + "organization");
+                }
+                account.setPaypalEmail(normalizedPaypalEmail);
+            }
+        } else if (request.paypalEmail() != null && !request.paypalEmail().isBlank()) {
+            throw new BadRequestException("Only a PayPal account has a PayPal e-mail address");
+        } else if (request.iban() != null) {
             String normalizedIban = normalizeIban(request.iban());
             validateIban(normalizedIban);
             if (!normalizedIban.equals(account.getIban())
@@ -227,6 +266,14 @@ public class BankAccountService {
         if (!IBAN_FORMAT.matcher(iban).matches()) {
             throw new BadRequestException("Invalid IBAN format");
         }
+    }
+
+    /** E-mail addresses are compared case-insensitively, so they are stored in lower case. */
+    private static String normalizePaypalEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new BadRequestException("A PayPal account needs the e-mail address of the PayPal account");
+        }
+        return email.trim().toLowerCase(Locale.ROOT);
     }
 
     private String normalizeIban(String iban) {

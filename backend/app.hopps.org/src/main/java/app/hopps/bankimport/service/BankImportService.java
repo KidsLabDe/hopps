@@ -95,6 +95,13 @@ public class BankImportService {
             schema = schemaService.get(schemaId);
         }
 
+        // A PayPal export only makes sense in a PayPal account, and a bank statement only in a bank account.
+        if ("PAYPAL".equals(fileType) != account.isPaypal()) {
+            throw new BadRequestException(account.isPaypal()
+                    ? "Only PayPal activity exports can be imported into a PayPal account"
+                    : "PayPal activity exports can only be imported into a PayPal account");
+        }
+
         String sha256 = DedupeHashService.sha256(content);
         if (importRepository.existsActiveBySha(bankAccountId, sha256)) {
             throw new BadRequestException("An identical file is already queued or processing for this account");

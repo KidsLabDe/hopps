@@ -1226,7 +1226,14 @@
             "editTitle": "Modifier le compte bancaire",
             "name": "Nom du compte",
             "namePlaceholder": "p. ex. Compte du club",
+            "type": "Type de compte",
+            "types": {
+                "BANK": "Compte bancaire",
+                "PAYPAL": "PayPal"
+            },
             "iban": "IBAN",
+            "paypalEmail": "Adresse e-mail PayPal",
+            "paypalEmailPlaceholder": "p. ex. tresorerie@association.fr",
             "bic": "BIC",
             "bankName": "Nom de la banque",
             "currency": "Devise",
@@ -1251,7 +1258,10 @@
                 "bicTooLong": "Le BIC ne doit pas dépasser 11 caractères",
                 "openingBalanceDateRequired": "La date du solde initial est obligatoire lorsqu'un solde est indiqué",
                 "openingBalanceRequired": "Le solde initial est obligatoire lorsqu'une date est indiquée",
-                "duplicateIban": "Un compte avec cet IBAN existe déjà dans votre organisation"
+                "duplicateIban": "Un compte avec cet IBAN existe déjà dans votre organisation",
+                "paypalEmailRequired": "L'adresse e-mail PayPal est requise",
+                "paypalEmailInvalid": "Adresse e-mail invalide",
+                "duplicatePaypalEmail": "Un compte PayPal avec cette adresse e-mail existe déjà dans votre organisation"
             }
         },
         "toast": {
@@ -1270,7 +1280,9 @@
             "currencyMismatchTitle": "Devise incorrecte",
             "currencyMismatch": "Le fichier contient des montants en {{fileCurrencies}}, mais le compte est tenu en {{accountCurrency}}. Importez le fichier dans un compte de cette devise.",
             "mixedCurrencies": "Le fichier contient des montants en plusieurs devises ({{fileCurrencies}}). Un compte ne peut être tenu que dans une seule devise, le fichier ne peut donc pas être importé.",
-            "startError": "L'import n'a pas pu être lancé."
+            "startError": "L'import n'a pas pu être lancé.",
+            "paypalFileIntoBankAccount": "Ceci est un export PayPal. Il ne peut être importé que dans un compte PayPal.",
+            "bankFileIntoPaypalAccount": "Seuls les exports PayPal peuvent être importés dans un compte PayPal."
         },
         "title": "Importer un relevé bancaire",
         "wizard": {

@@ -89,7 +89,7 @@ public class BankAccountImportResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Operation(summary = "Queue a bank file import", description = "Uploads the file (CSV, MT940 or PayPal activity export), archives it in S3, creates a BankImport job in QUEUED state and returns 202 Accepted. MT940 and PayPal files are auto-detected and require no schemaId. The worker picks it up within a few seconds. Poll GET /imports/{id} for status.")
     @APIResponse(responseCode = "202", description = "Import queued", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = BankImportResponse.class)))
-    @APIResponse(responseCode = "400", description = "File missing, schemaId missing, or duplicate file already queued")
+    @APIResponse(responseCode = "400", description = "File missing, schemaId missing, duplicate file already queued, or a PayPal export for a bank account (or the other way round)")
     @APIResponse(responseCode = "401", description = "User not logged in")
     @APIResponse(responseCode = "404", description = "Account or schema not found")
     @APIResponse(responseCode = "409", description = "The file's amounts are in another currency than the account, or in several (code "

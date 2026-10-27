@@ -1269,7 +1269,14 @@
             "editTitle": "Bankkonto bearbeiten",
             "name": "Kontoname",
             "namePlaceholder": "z. B. Vereinskonto",
+            "type": "Kontoart",
+            "types": {
+                "BANK": "Bankkonto",
+                "PAYPAL": "PayPal"
+            },
             "iban": "IBAN",
+            "paypalEmail": "PayPal-E-Mail-Adresse",
+            "paypalEmailPlaceholder": "z. B. kasse@verein.de",
             "bic": "BIC",
             "bankName": "Bankname",
             "currency": "Währung",
@@ -1294,7 +1301,10 @@
                 "bicTooLong": "BIC darf maximal 11 Zeichen lang sein",
                 "openingBalanceDateRequired": "Datum des Eröffnungssaldos ist erforderlich, wenn ein Saldo angegeben wird",
                 "openingBalanceRequired": "Eröffnungssaldo ist erforderlich, wenn ein Datum angegeben wird",
-                "duplicateIban": "Ein Konto mit dieser IBAN existiert bereits in der Organisation"
+                "duplicateIban": "Ein Konto mit dieser IBAN existiert bereits in der Organisation",
+                "paypalEmailRequired": "PayPal-E-Mail-Adresse ist erforderlich",
+                "paypalEmailInvalid": "Ungültige E-Mail-Adresse",
+                "duplicatePaypalEmail": "Ein PayPal-Konto mit dieser E-Mail-Adresse existiert in der Organisation bereits"
             }
         },
         "toast": {
@@ -1313,7 +1323,9 @@
             "currencyMismatchTitle": "Falsche Währung",
             "currencyMismatch": "Die Datei enthält Beträge in {{fileCurrencies}}, das Konto wird aber in {{accountCurrency}} geführt. Die Datei bitte in ein Konto mit dieser Währung importieren.",
             "mixedCurrencies": "Die Datei enthält Beträge in mehreren Währungen ({{fileCurrencies}}). Ein Konto kann nur eine Währung führen, deshalb kann die Datei nicht importiert werden.",
-            "startError": "Der Import konnte nicht gestartet werden."
+            "startError": "Der Import konnte nicht gestartet werden.",
+            "paypalFileIntoBankAccount": "Das ist ein PayPal-Export. Er lässt sich nur in ein PayPal-Konto importieren.",
+            "bankFileIntoPaypalAccount": "In ein PayPal-Konto lassen sich nur PayPal-Exporte importieren."
         },
         "title": "Kontoauszug importieren",
         "wizard": {

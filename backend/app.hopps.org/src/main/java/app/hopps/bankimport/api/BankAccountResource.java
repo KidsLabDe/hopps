@@ -71,7 +71,7 @@ public class BankAccountResource {
 
     @Transactional
     @POST
-    @Operation(summary = "Create a bank account", description = "Creates a new bank account. If bommelId is omitted, the account is attached to the organization's root bommel.")
+    @Operation(summary = "Create a bank account", description = "Creates a new bank account. A BANK account (the default type) needs an IBAN, a PAYPAL account the e-mail address of the PayPal account instead. If bommelId is omitted, the account is attached to the organization's root bommel.")
     @APIResponse(responseCode = "201", description = "Bank account created", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = BankAccountResponse.class)))
     @APIResponse(responseCode = "400", description = "Invalid input (e.g. duplicate IBAN, invalid IBAN format)")
     @APIResponse(responseCode = "401", description = "User not logged in")

@@ -1226,7 +1226,14 @@
             "editTitle": "Modifica conto bancario",
             "name": "Nome del conto",
             "namePlaceholder": "es. Conto dell'associazione",
+            "type": "Tipo di conto",
+            "types": {
+                "BANK": "Conto bancario",
+                "PAYPAL": "PayPal"
+            },
             "iban": "IBAN",
+            "paypalEmail": "Indirizzo e-mail PayPal",
+            "paypalEmailPlaceholder": "es. tesoreria@associazione.it",
             "bic": "BIC",
             "bankName": "Nome della banca",
             "currency": "Valuta",
@@ -1251,7 +1258,10 @@
                 "bicTooLong": "Il BIC non può superare gli 11 caratteri",
                 "openingBalanceDateRequired": "La data del saldo iniziale è obbligatoria quando è indicato un saldo",
                 "openingBalanceRequired": "Il saldo iniziale è obbligatorio quando è indicata una data",
-                "duplicateIban": "Esiste già un conto con questo IBAN nella tua organizzazione"
+                "duplicateIban": "Esiste già un conto con questo IBAN nella tua organizzazione",
+                "paypalEmailRequired": "L'indirizzo e-mail PayPal è obbligatorio",
+                "paypalEmailInvalid": "Indirizzo e-mail non valido",
+                "duplicatePaypalEmail": "Un conto PayPal con questo indirizzo e-mail esiste già nell'organizzazione"
             }
         },
         "toast": {
@@ -1270,7 +1280,9 @@
             "currencyMismatchTitle": "Valuta errata",
             "currencyMismatch": "Il file contiene importi in {{fileCurrencies}}, ma il conto è tenuto in {{accountCurrency}}. Importa il file in un conto con questa valuta.",
             "mixedCurrencies": "Il file contiene importi in più valute ({{fileCurrencies}}). Un conto può avere una sola valuta, quindi il file non può essere importato.",
-            "startError": "Non è stato possibile avviare l'importazione."
+            "startError": "Non è stato possibile avviare l'importazione.",
+            "paypalFileIntoBankAccount": "Questa è un'esportazione PayPal. Può essere importata solo in un conto PayPal.",
+            "bankFileIntoPaypalAccount": "In un conto PayPal si possono importare solo esportazioni PayPal."
         },
         "title": "Importa estratto conto",
         "wizard": {

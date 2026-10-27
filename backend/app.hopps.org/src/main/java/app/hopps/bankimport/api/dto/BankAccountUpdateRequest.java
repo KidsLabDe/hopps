@@ -1,10 +1,13 @@
 package app.hopps.bankimport.api.dto;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 /**
  * Request payload for updating a bank account. All fields are optional; only non-null fields are applied (PATCH
@@ -12,7 +15,8 @@ import java.time.LocalDate;
  */
 public record BankAccountUpdateRequest(
         String name,
-        @Size(min = 15, max = 34) String iban,
+        @Schema(description = "Only for BANK accounts") @Size(min = 15, max = 34) String iban,
+        @Schema(description = "Only for PAYPAL accounts") @Email @Size(max = 320) String paypalEmail,
         @Size(max = 11) String bic,
         String bankName,
         String accountHolder,

@@ -1259,7 +1259,14 @@
             "editTitle": "Edit bank account",
             "name": "Account name",
             "namePlaceholder": "e.g. Club account",
+            "type": "Account type",
+            "types": {
+                "BANK": "Bank account",
+                "PAYPAL": "PayPal"
+            },
             "iban": "IBAN",
+            "paypalEmail": "PayPal e-mail address",
+            "paypalEmailPlaceholder": "e.g. treasurer@club.org",
             "bic": "BIC",
             "bankName": "Bank name",
             "currency": "Currency",
@@ -1284,7 +1291,10 @@
                 "bicTooLong": "BIC must not exceed 11 characters",
                 "openingBalanceDateRequired": "Opening balance date is required when a balance is provided",
                 "openingBalanceRequired": "Opening balance is required when a date is provided",
-                "duplicateIban": "An account with this IBAN already exists in your organization"
+                "duplicateIban": "An account with this IBAN already exists in your organization",
+                "paypalEmailRequired": "PayPal e-mail address is required",
+                "paypalEmailInvalid": "Invalid e-mail address",
+                "duplicatePaypalEmail": "A PayPal account with this e-mail address already exists in your organization"
             }
         },
         "toast": {
@@ -1303,7 +1313,9 @@
             "currencyMismatchTitle": "Wrong currency",
             "currencyMismatch": "The file contains amounts in {{fileCurrencies}}, but the account is kept in {{accountCurrency}}. Import the file into an account with that currency.",
             "mixedCurrencies": "The file contains amounts in several currencies ({{fileCurrencies}}). An account can only hold one currency, so the file cannot be imported.",
-            "startError": "The import could not be started."
+            "startError": "The import could not be started.",
+            "paypalFileIntoBankAccount": "This is a PayPal export. It can only be imported into a PayPal account.",
+            "bankFileIntoPaypalAccount": "Only PayPal exports can be imported into a PayPal account."
         },
         "title": "Import bank statement",
         "wizard": {

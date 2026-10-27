@@ -2214,7 +2214,7 @@ export class Client {
     /**
      * Queue a bank file import
      * @param accountId Bank account ID
-     * @param schemaId (optional) ID of the BankCsvSchema to apply; omit for MT940 files
+     * @param schemaId (optional) ID of the BankCsvSchema to apply; omit for MT940 and PayPal files
      * @param file (optional) 
      * @return Import queued
      */
@@ -2260,7 +2260,7 @@ export class Client {
             });
         } else if (status === 400) {
             return response.text().then((_responseText) => {
-            return throwException("File missing, schemaId missing, or duplicate file already queued", status, _responseText, _headers);
+            return throwException("File missing, schemaId missing, duplicate file already queued, or a PayPal export for a bank account (or the other way round)", status, _responseText, _headers);
             });
         } else if (status === 401) {
             return response.text().then((_responseText) => {
@@ -4363,7 +4363,7 @@ export class Client {
             });
         } else if (status === 400) {
             return response.text().then((_responseText) => {
-            return throwException("No parts, a non-positive amount, an unknown bommel, an invalid category value, or (confirmDocument) a part without bommel or mandatory category group, or amounts exceeding the document total", status, _responseText, _headers);
+            return throwException("No parts, a negative amount, an unknown bommel, an invalid category value, or (confirmDocument) a part without amount, bommel or mandatory category group, or amounts exceeding the document total", status, _responseText, _headers);
             });
         } else if (status === 401) {
             return response.text().then((_responseText) => {
@@ -6599,7 +6599,12 @@ export type AnalysisStatus = "PENDING" | "ANALYZING" | "COMPLETED" | "FAILED" | 
 
 export class BankAccountCreateRequest implements IBankAccountCreateRequest {
     name!: string;
-    iban!: string;
+    /** BANK (default) or PAYPAL; cannot be changed later */
+    type?: BankAccountType;
+    /** Required for BANK accounts */
+    iban?: string;
+    /** Required for PAYPAL accounts */
+    paypalEmail?: string;
     bic?: string;
     bankName?: string;
     accountHolder?: string;
@@ -6629,7 +6634,9 @@ export class BankAccountCreateRequest implements IBankAccountCreateRequest {
                     this[property] = _data[property];
             }
             this.name = _data["name"];
+            this.type = _data["type"];
             this.iban = _data["iban"];
+            this.paypalEmail = _data["paypalEmail"];
             this.bic = _data["bic"];
             this.bankName = _data["bankName"];
             this.accountHolder = _data["accountHolder"];
@@ -6657,7 +6664,9 @@ export class BankAccountCreateRequest implements IBankAccountCreateRequest {
                 data[property] = this[property];
         }
         data["name"] = this.name;
+        data["type"] = this.type;
         data["iban"] = this.iban;
+        data["paypalEmail"] = this.paypalEmail;
         data["bic"] = this.bic;
         data["bankName"] = this.bankName;
         data["accountHolder"] = this.accountHolder;
@@ -6681,7 +6690,12 @@ export class BankAccountCreateRequest implements IBankAccountCreateRequest {
 
 export interface IBankAccountCreateRequest {
     name: string;
-    iban: string;
+    /** BANK (default) or PAYPAL; cannot be changed later */
+    type?: BankAccountType;
+    /** Required for BANK accounts */
+    iban?: string;
+    /** Required for PAYPAL accounts */
+    paypalEmail?: string;
     bic?: string;
     bankName?: string;
     accountHolder?: string;
@@ -6702,7 +6716,9 @@ export class BankAccountResponse implements IBankAccountResponse {
     bommelId?: number;
     bommelName?: string;
     name?: string;
+    type?: BankAccountType;
     iban?: string;
+    paypalEmail?: string;
     bic?: string;
     bankName?: string;
     accountHolder?: string;
@@ -6742,7 +6758,9 @@ export class BankAccountResponse implements IBankAccountResponse {
             this.bommelId = _data["bommelId"];
             this.bommelName = _data["bommelName"];
             this.name = _data["name"];
+            this.type = _data["type"];
             this.iban = _data["iban"];
+            this.paypalEmail = _data["paypalEmail"];
             this.bic = _data["bic"];
             this.bankName = _data["bankName"];
             this.accountHolder = _data["accountHolder"];
@@ -6780,7 +6798,9 @@ export class BankAccountResponse implements IBankAccountResponse {
         data["bommelId"] = this.bommelId;
         data["bommelName"] = this.bommelName;
         data["name"] = this.name;
+        data["type"] = this.type;
         data["iban"] = this.iban;
+        data["paypalEmail"] = this.paypalEmail;
         data["bic"] = this.bic;
         data["bankName"] = this.bankName;
         data["accountHolder"] = this.accountHolder;
@@ -6814,7 +6834,9 @@ export interface IBankAccountResponse {
     bommelId?: number;
     bommelName?: string;
     name?: string;
+    type?: BankAccountType;
     iban?: string;
+    paypalEmail?: string;
     bic?: string;
     bankName?: string;
     accountHolder?: string;
@@ -6835,9 +6857,14 @@ export interface IBankAccountResponse {
     [key: string]: any;
 }
 
+export type BankAccountType = "BANK" | "PAYPAL";
+
 export class BankAccountUpdateRequest implements IBankAccountUpdateRequest {
     name?: string;
+    /** Only for BANK accounts */
     iban?: string;
+    /** Only for PAYPAL accounts */
+    paypalEmail?: string;
     bic?: string;
     bankName?: string;
     accountHolder?: string;
@@ -6867,6 +6894,7 @@ export class BankAccountUpdateRequest implements IBankAccountUpdateRequest {
             }
             this.name = _data["name"];
             this.iban = _data["iban"];
+            this.paypalEmail = _data["paypalEmail"];
             this.bic = _data["bic"];
             this.bankName = _data["bankName"];
             this.accountHolder = _data["accountHolder"];
@@ -6894,6 +6922,7 @@ export class BankAccountUpdateRequest implements IBankAccountUpdateRequest {
         }
         data["name"] = this.name;
         data["iban"] = this.iban;
+        data["paypalEmail"] = this.paypalEmail;
         data["bic"] = this.bic;
         data["bankName"] = this.bankName;
         data["accountHolder"] = this.accountHolder;
@@ -6916,7 +6945,10 @@ export class BankAccountUpdateRequest implements IBankAccountUpdateRequest {
 
 export interface IBankAccountUpdateRequest {
     name?: string;
+    /** Only for BANK accounts */
     iban?: string;
+    /** Only for PAYPAL accounts */
+    paypalEmail?: string;
     bic?: string;
     bankName?: string;
     accountHolder?: string;

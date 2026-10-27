@@ -156,6 +156,12 @@ function maskIban(iban?: string): string {
     return `${clean.slice(0, 4)} •••• •••• ${clean.slice(-4)}`;
 }
 
+/** What identifies the account: the masked IBAN of a bank account, the e-mail address of a PayPal account. */
+function accountIdentifier(account: BankAccountResponse, masked: boolean): string {
+    if (account.type === 'PAYPAL') return account.paypalEmail ?? '—';
+    return masked ? maskIban(account.iban) : (account.iban ?? '—');
+}
+
 function AccountCard({
     account,
     openCount,
@@ -191,7 +197,9 @@ function AccountCard({
                 </div>
                 <div className="min-w-0 flex-1">
                     <div className="font-bold text-[15px] truncate">{account.name}</div>
-                    <div className="text-xs text-muted-foreground font-mono truncate">{account.bankName}</div>
+                    <div className="text-xs text-muted-foreground font-mono truncate">
+                        {account.type === 'PAYPAL' ? t('bankAccounts.form.types.PAYPAL') : account.bankName}
+                    </div>
                 </div>
                 <button
                     type="button"
@@ -203,7 +211,7 @@ function AccountCard({
                 </button>
             </div>
 
-            <div className="mt-3 text-xs font-mono text-muted-foreground tracking-widest">{maskIban(account.iban)}</div>
+            <div className="mt-3 text-xs font-mono text-muted-foreground tracking-widest truncate">{accountIdentifier(account, true)}</div>
 
             {/* The status pill shares the small label line rather than sitting beside the amount: at the card's width
                 a long balance and the pill collided, and the pill competed with the number for attention. */}
@@ -600,7 +608,7 @@ function AccountTab({
             <div className="flex flex-wrap items-center gap-3 mb-4">
                 <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
                     <AccountDot color={account.color} />
-                    <span className="font-mono">{account.iban}</span>
+                    <span className="font-mono">{accountIdentifier(account, false)}</span>
                     {(account.balance ?? account.openingBalance) !== undefined && (
                         <span>
                             · {t('konten.balance')} {format(account.balance ?? account.openingBalance, { currency: account.currency })}
