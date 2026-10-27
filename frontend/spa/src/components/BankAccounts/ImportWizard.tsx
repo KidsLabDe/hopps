@@ -65,21 +65,22 @@ export function ImportWizard({ accountId, onClose, onViewTransactions }: ImportW
     const createSchemaMutation = useCreateBankSchema();
     const createdSchemaRef = useRef<number | null>(null);
 
-    const isMt940 = preview?.fileType === 'MT940';
+    // MT940 and PayPal exports are read by their own parsers and need no CSV schema.
+    const isSchemaless = preview?.fileType === 'MT940' || preview?.fileType === 'PAYPAL';
 
     // Auto-detect schema from header columns once preview is loaded (CSV only)
-    const headerColumns = !isMt940 ? (preview?.headerColumns ?? null) : null;
+    const headerColumns = !isSchemaless ? (preview?.headerColumns ?? null) : null;
     const { data: detection } = useSuggestSchema(accountId, headerColumns);
 
     // When detection result arrives and no schema is manually chosen yet, apply it
     useEffect(() => {
-        if (isMt940 || !detection || schemaId) return;
+        if (isSchemaless || !detection || schemaId) return;
         if (detection.type === 'ORG' && detection.schemaId) {
             setSchemaId(`org:${detection.schemaId}`);
         } else if (detection.type === 'TEMPLATE' && detection.templateId) {
             setSchemaId(`tpl:${detection.templateId}`);
         }
-    }, [detection, isMt940, schemaId]);
+    }, [detection, isSchemaless, schemaId]);
 
     // Poll import progress
     // TODO: polling (and the list refresh below) lives in this component, so closing the dialog while the import still
@@ -102,7 +103,7 @@ export function ImportWizard({ accountId, onClose, onViewTransactions }: ImportW
         }
     }, [importStatus?.status, state, queryClient, accountId]);
 
-    const isDetecting = state === 'preview' && !isMt940 && headerColumns != null && detection == null;
+    const isDetecting = state === 'preview' && !isSchemaless && headerColumns != null && detection == null;
     const isTemplateSelected = schemaId.startsWith('tpl:');
     const selectedSchema = isTemplateSelected ? undefined : schemas.find((s) => String(s.id) === schemaId.replace('org:', ''));
     const selectedTemplate = isTemplateSelected ? templates.find((tpl) => `tpl:${tpl.templateId}` === schemaId) : undefined;
@@ -149,12 +150,12 @@ export function ImportWizard({ accountId, onClose, onViewTransactions }: ImportW
 
     const handleImport = async () => {
         if (!file) return;
-        if (!isMt940 && !schemaId) return;
+        if (!isSchemaless && !schemaId) return;
         setStartError(null);
         setState('importing');
         try {
             let resolvedSchemaId: number | undefined;
-            if (!isMt940) {
+            if (!isSchemaless) {
                 if (isTemplateSelected && selectedTemplate) {
                     if (createdSchemaRef.current) {
                         resolvedSchemaId = createdSchemaRef.current;
@@ -237,10 +238,14 @@ export function ImportWizard({ accountId, onClose, onViewTransactions }: ImportW
         return (
             <div className="flex flex-col gap-3 min-w-0">
                 {/* Format detection banner */}
-                {isMt940 ? (
+                {isSchemaless ? (
                     <div className="flex items-center gap-3 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 rounded-xl px-4 py-3">
                         <Sparkles className="w-5 h-5 flex-shrink-0" />
-                        <p className="text-[13.5px] font-semibold">{t('bankImport.wizard.mt940Detected', { count: totalRows })}</p>
+                        <p className="text-[13.5px] font-semibold">
+                            {preview?.fileType === 'PAYPAL'
+                                ? t('bankImport.wizard.paypalDetected', { count: totalRows })
+                                : t('bankImport.wizard.mt940Detected', { count: totalRows })}
+                        </p>
                     </div>
                 ) : isDetecting ? (
                     <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-3 text-muted-foreground text-sm">
@@ -266,7 +271,7 @@ export function ImportWizard({ accountId, onClose, onViewTransactions }: ImportW
                 )}
 
                 {/* Schema picker — always available for CSV so a confident-but-wrong auto-detection can be overridden */}
-                {!isMt940 && !isDetecting ? (
+                {!isSchemaless && !isDetecting ? (
                     <div className="grid gap-1.5">
                         <div className="flex items-center gap-1.5">
                             <label className="text-sm font-medium">
@@ -321,7 +326,7 @@ export function ImportWizard({ accountId, onClose, onViewTransactions }: ImportW
                     (() => {
                         const columns = preview.headerColumns ?? [];
                         // CSV: sampleRows[0] is the header row duplicated, so skip it
-                        const dataRows = !isMt940 ? preview.sampleRows.slice(1) : preview.sampleRows;
+                        const dataRows = !isSchemaless ? preview.sampleRows.slice(1) : preview.sampleRows;
                         const columnCount = Math.max(columns.length, ...dataRows.map((r) => r.length));
                         const indices = Array.from({ length: columnCount }, (_, ci) => ci);
                         return (
@@ -405,7 +410,7 @@ export function ImportWizard({ accountId, onClose, onViewTransactions }: ImportW
                         {t('common.goBack')}
                     </Button>
                     <div className="flex-1" />
-                    <Button onClick={() => handleImport()} disabled={(!isMt940 && !schemaId) || isDetecting || previewCurrencyMismatch}>
+                    <Button onClick={() => handleImport()} disabled={(!isSchemaless && !schemaId) || isDetecting || previewCurrencyMismatch}>
                         {t('bankImport.wizard.importBtn', { count: totalRows })}
                     </Button>
                 </div>

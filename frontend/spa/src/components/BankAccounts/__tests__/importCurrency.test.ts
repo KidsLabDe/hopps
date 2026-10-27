@@ -38,6 +38,15 @@ describe('previewCurrencies', () => {
         } as CsvPreviewResponse;
         expect(previewCurrencies(mt940, undefined)).toEqual(['CHF']);
     });
+
+    it('reads the currency column of a PayPal preview', () => {
+        const paypal = {
+            fileType: 'PAYPAL',
+            headerColumns: ['bookingDate', 'amount', 'currency', 'purpose', 'counterpartyName'],
+            sampleRows: [['2024-01-02', '50.00', 'EUR', 'Website-Zahlung', 'Muster']],
+        } as CsvPreviewResponse;
+        expect(previewCurrencies(paypal, undefined)).toEqual(['EUR']);
+    });
 });
 
 describe('isCurrencyMismatch', () => {

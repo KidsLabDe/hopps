@@ -7,6 +7,7 @@ import app.hopps.bankimport.domain.BankFieldType;
 import app.hopps.bankimport.parser.CsvParser;
 import app.hopps.bankimport.parser.Mt940Parser;
 import app.hopps.bankimport.parser.Mt940Parser.ParsedMt940Transaction;
+import app.hopps.bankimport.parser.PaypalParser;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,8 +19,8 @@ import java.util.TreeSet;
 
 /**
  * Checks, before an import is queued, that the file's amounts are in the account's currency (CSV column mapped to
- * {@link BankFieldType#CURRENCY}, MT940 opening balance). The import itself runs asynchronously in the worker, so this
- * is the last point where the user can still be told.
+ * {@link BankFieldType#CURRENCY}, MT940 opening balance, the currency a PayPal balance is kept in). The import itself
+ * runs asynchronously in the worker, so this is the last point where the user can still be told.
  * <p>
  * Files without a currency are not checked: their rows take the account's currency. A file that cannot be read is not
  * rejected here either; the worker fails it with the usual error report.
@@ -48,6 +49,11 @@ public class ImportFileCheckService {
         try {
             if ("MT940".equals(fileType)) {
                 return currenciesOfMt940(Mt940ImportService.decodeWithFallback(content));
+            }
+            if ("PAYPAL".equals(fileType)) {
+                // Payments in other currencies are converted inside the file; only the balance currency is booked.
+                String currency = PaypalParser.parse(Mt940ImportService.decodeWithFallback(content)).currency();
+                return currency != null ? Set.of(currency) : Set.of();
             }
             return currenciesOfCsv(CsvImportService.decode(content, schema.getEncoding()), schema);
         } catch (RuntimeException e) {

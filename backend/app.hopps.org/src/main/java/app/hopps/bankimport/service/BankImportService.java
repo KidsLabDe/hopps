@@ -5,6 +5,7 @@ import app.hopps.bankimport.domain.BankCsvSchema;
 import app.hopps.bankimport.domain.BankImport;
 import app.hopps.bankimport.domain.BankImportStatus;
 import app.hopps.bankimport.parser.Mt940Parser;
+import app.hopps.bankimport.parser.PaypalParser;
 import app.hopps.bankimport.repository.BankImportRepository;
 import app.hopps.bankimport.repository.BankTransactionRepository;
 import app.hopps.shared.infrastructure.storage.StorageKeys;
@@ -84,6 +85,8 @@ public class BankImportService {
         BankCsvSchema schema = null;
         if (Mt940Parser.isMt940(content)) {
             fileType = "MT940";
+        } else if (PaypalParser.isPaypal(content)) {
+            fileType = "PAYPAL";
         } else {
             if (schemaId == null) {
                 throw new BadRequestException("schemaId is required for CSV imports");

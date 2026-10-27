@@ -87,7 +87,7 @@ public class BankAccountImportResource {
     @POST
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @Produces(MediaType.APPLICATION_JSON)
-    @Operation(summary = "Queue a bank file import", description = "Uploads the file (CSV or MT940), archives it in S3, creates a BankImport job in QUEUED state and returns 202 Accepted. MT940 files are auto-detected and require no schemaId. The worker picks it up within a few seconds. Poll GET /imports/{id} for status.")
+    @Operation(summary = "Queue a bank file import", description = "Uploads the file (CSV, MT940 or PayPal activity export), archives it in S3, creates a BankImport job in QUEUED state and returns 202 Accepted. MT940 and PayPal files are auto-detected and require no schemaId. The worker picks it up within a few seconds. Poll GET /imports/{id} for status.")
     @APIResponse(responseCode = "202", description = "Import queued", content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = BankImportResponse.class)))
     @APIResponse(responseCode = "400", description = "File missing, schemaId missing, or duplicate file already queued")
     @APIResponse(responseCode = "401", description = "User not logged in")
@@ -97,7 +97,7 @@ public class BankAccountImportResource {
     public Response createImport(
             @PathParam("accountId") @Parameter(description = "Bank account ID") Long accountId,
             @RestForm("file") FileUpload file,
-            @QueryParam("schemaId") @Parameter(description = "ID of the BankCsvSchema to apply; omit for MT940 files") Long schemaId) {
+            @QueryParam("schemaId") @Parameter(description = "ID of the BankCsvSchema to apply; omit for MT940 and PayPal files") Long schemaId) {
         if (file == null || file.fileName() == null || file.fileName().isBlank()) {
             throw new BadRequestException("File is required");
         }

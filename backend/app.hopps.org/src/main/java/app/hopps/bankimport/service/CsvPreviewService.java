@@ -5,6 +5,8 @@ import app.hopps.bankimport.parser.DelimiterDetector;
 import app.hopps.bankimport.parser.EncodingDetector;
 import app.hopps.bankimport.parser.Mt940Parser;
 import app.hopps.bankimport.parser.Mt940Parser.ParsedMt940Transaction;
+import app.hopps.bankimport.parser.PaypalParser;
+import app.hopps.bankimport.parser.PaypalParser.ParsedPaypalTransaction;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -35,6 +37,9 @@ public class CsvPreviewService {
         // Fast-path: detect MT940 before CSV processing
         if (Mt940Parser.isMt940(content)) {
             return previewMt940(content);
+        }
+        if (PaypalParser.isPaypal(content)) {
+            return previewPaypal(content);
         }
         Charset charset;
         String text;
@@ -161,6 +166,43 @@ public class CsvPreviewService {
                 headerColumns,
                 sampleRows,
                 "MT940");
+    }
+
+    /**
+     * Previews a PayPal export as the transactions that will be booked (holds dropped, conversions folded, fees split),
+     * in the same column layout as the MT940 preview.
+     */
+    private CsvPreviewResponse previewPaypal(byte[] content) {
+        String warning = null;
+        List<ParsedPaypalTransaction> transactions;
+        try {
+            transactions = PaypalParser.parse(Mt940ImportService.decodeWithFallback(content)).transactions();
+        } catch (RuntimeException e) {
+            transactions = List.of();
+            warning = "PayPal parsing failed: " + e.getMessage();
+        }
+
+        List<List<String>> sampleRows = new ArrayList<>();
+        for (ParsedPaypalTransaction tx : transactions.subList(0,
+                Math.min(transactions.size(), MT940_PREVIEW_TRANSACTIONS))) {
+            sampleRows.add(Arrays.asList(
+                    tx.bookingDate().toString(),
+                    tx.amount().toPlainString(),
+                    tx.currency(),
+                    tx.purpose(),
+                    tx.counterpartyName()));
+        }
+
+        return new CsvPreviewResponse(
+                "UTF-8",
+                ",",
+                true,
+                warning,
+                transactions.size(),
+                List.of(),
+                List.of("bookingDate", "amount", "currency", "purpose", "counterpartyName"),
+                sampleRows,
+                "PAYPAL");
     }
 
     private static List<String> splitLines(String text) {

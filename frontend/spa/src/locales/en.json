@@ -1317,6 +1317,7 @@
             "fileDropHint": "Supported formats: .csv, .txt",
             "dropSubtitle": "Sparkasse, GLS, DKB, VR-Bank … hopps auto-detects the format.",
             "mt940Detected": "MT940 detected · {{count}} transactions found · no schema needed",
+            "paypalDetected": "PayPal export detected · {{count}} transactions · fees are booked separately, holds are left out",
             "detecting": "Detecting format…",
             "noFormatDetected": "Format could not be detected automatically. Please select a schema below.",
             "formatDetected": "Format detected: {{schema}} · Account {{account}} · {{lines}} rows read",

@@ -58,6 +58,7 @@ Status-Skala siehe [README.md](README.md). Pfade relativ zu
 | Bank-Import CSV mit Schema-Editor | ✅ | Delimiter, Encoding, Formate konfigurierbar | BE `bankimport/`, SPA `/bank-accounts`, `/bank-schemas` |
 | Bank-Import Vorlagen (automatische Erkennung) | ✅ | Sparkasse (MT940, CAMT.052 v2/v8), Volksbanken / Raiffeisenbanken Umsatz-CSV (18 Spalten, Atruvia-Banken inkl. Deutsche Skatbank) | BE `SystemTemplateService`, `SchemaDetectionService` (Stand 2026-10-05) |
 | Bank-Import MT940 | ✅ | – | BE `bankimport/` |
+| Bank-Import PayPal | 🟡 | Stand 2026-10-27: PayPal-Aktivitätenexport (CSV, deutsch oder englisch) wird automatisch erkannt, kein Schema nötig. Gebühren werden als eigene Buchung erfasst (Bruttoprinzip), Einbehaltungen ausgelassen, Fremdwährungszahlungen mit dem umgerechneten EUR-Betrag gebucht. Einschränkung: ein Bankkonto braucht noch eine IBAN | BE `bankimport/parser/PaypalParser.java`, `bankimport/service/PaypalImportService.java` |
 | Währungsprüfung beim Import | ✅ | Vor dem Import (Stand 2026-10-04): Beträge in anderer Währung als das Konto (oder gemischte Währungen) werden abgelehnt. Keine Prüfung, ob die Datei zum Konto (IBAN) passt | BE `bankimport/service/ImportFileCheckService.java`, SPA `BankAccounts/ImportWizard.tsx` |
 | Abgleich Bank ↔ Belege (inkl. Teilbeträge) | ✅ | Manuell; Auto-Matching erst Gerüst | BE `BankTransactionMatch` |
 | Automatischer Kontoabruf (FinTS/EBICS) | ❌ | – | – |
