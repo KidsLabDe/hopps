@@ -6615,6 +6615,8 @@ export class BankAccountCreateRequest implements IBankAccountCreateRequest {
     color?: string;
     defaultSchemaId?: number;
     bommelId?: number;
+    /** PayPal accounts only: book imported fees automatically */
+    feeBooking?: FeeBookingDto;
 
     [key: string]: any;
 
@@ -6647,6 +6649,7 @@ export class BankAccountCreateRequest implements IBankAccountCreateRequest {
             this.color = _data["color"];
             this.defaultSchemaId = _data["defaultSchemaId"];
             this.bommelId = _data["bommelId"];
+            this.feeBooking = _data["feeBooking"] ? FeeBookingDto.fromJS(_data["feeBooking"]) : undefined as any;
         }
     }
 
@@ -6677,6 +6680,7 @@ export class BankAccountCreateRequest implements IBankAccountCreateRequest {
         data["color"] = this.color;
         data["defaultSchemaId"] = this.defaultSchemaId;
         data["bommelId"] = this.bommelId;
+        data["feeBooking"] = this.feeBooking ? this.feeBooking.toJSON() : undefined as any;
         return data;
     }
 
@@ -6706,6 +6710,8 @@ export interface IBankAccountCreateRequest {
     color?: string;
     defaultSchemaId?: number;
     bommelId?: number;
+    /** PayPal accounts only: book imported fees automatically */
+    feeBooking?: FeeBookingDto;
 
     [key: string]: any;
 }
@@ -6730,6 +6736,7 @@ export class BankAccountResponse implements IBankAccountResponse {
     color?: string;
     defaultSchemaId?: number;
     defaultSchemaName?: string;
+    feeBooking?: FeeBookingDto;
     archived?: boolean;
     archivedAt?: Date;
     createdBy?: string;
@@ -6772,6 +6779,7 @@ export class BankAccountResponse implements IBankAccountResponse {
             this.color = _data["color"];
             this.defaultSchemaId = _data["defaultSchemaId"];
             this.defaultSchemaName = _data["defaultSchemaName"];
+            this.feeBooking = _data["feeBooking"] ? FeeBookingDto.fromJS(_data["feeBooking"]) : undefined as any;
             this.archived = _data["archived"];
             this.archivedAt = _data["archivedAt"] ? new Date(_data["archivedAt"].toString()) : undefined as any;
             this.createdBy = _data["createdBy"];
@@ -6812,6 +6820,7 @@ export class BankAccountResponse implements IBankAccountResponse {
         data["color"] = this.color;
         data["defaultSchemaId"] = this.defaultSchemaId;
         data["defaultSchemaName"] = this.defaultSchemaName;
+        data["feeBooking"] = this.feeBooking ? this.feeBooking.toJSON() : undefined as any;
         data["archived"] = this.archived;
         data["archivedAt"] = this.archivedAt ? this.archivedAt.toISOString() : undefined as any;
         data["createdBy"] = this.createdBy;
@@ -6848,6 +6857,7 @@ export interface IBankAccountResponse {
     color?: string;
     defaultSchemaId?: number;
     defaultSchemaName?: string;
+    feeBooking?: FeeBookingDto;
     archived?: boolean;
     archivedAt?: Date;
     createdBy?: string;
@@ -6874,6 +6884,8 @@ export class BankAccountUpdateRequest implements IBankAccountUpdateRequest {
     description?: string;
     color?: string;
     defaultSchemaId?: number;
+    /** PayPal accounts only: replaces the fee booking; omit to keep it, bommelId null turns it off */
+    feeBooking?: FeeBookingDto;
 
     [key: string]: any;
 
@@ -6904,6 +6916,7 @@ export class BankAccountUpdateRequest implements IBankAccountUpdateRequest {
             this.description = _data["description"];
             this.color = _data["color"];
             this.defaultSchemaId = _data["defaultSchemaId"];
+            this.feeBooking = _data["feeBooking"] ? FeeBookingDto.fromJS(_data["feeBooking"]) : undefined as any;
         }
     }
 
@@ -6932,6 +6945,7 @@ export class BankAccountUpdateRequest implements IBankAccountUpdateRequest {
         data["description"] = this.description;
         data["color"] = this.color;
         data["defaultSchemaId"] = this.defaultSchemaId;
+        data["feeBooking"] = this.feeBooking ? this.feeBooking.toJSON() : undefined as any;
         return data;
     }
 
@@ -6958,6 +6972,8 @@ export interface IBankAccountUpdateRequest {
     description?: string;
     color?: string;
     defaultSchemaId?: number;
+    /** PayPal accounts only: replaces the fee booking; omit to keep it, bommelId null turns it off */
+    feeBooking?: FeeBookingDto;
 
     [key: string]: any;
 }
@@ -10218,6 +10234,89 @@ export interface IExtractionBreakdownResponse {
 
 export type ExtractionSource = "ZUGFERD" | "AI" | "MANUAL";
 
+/** Automatic booking of PayPal fees (PayPal accounts only); bommelId null turns it off */
+export class FeeBookingDto implements IFeeBookingDto {
+    /** Bommel the fees are booked on; null turns automatic fee booking off */
+    bommelId?: number;
+    /** Area (Sphäre) of the booked fees, optional */
+    area?: TransactionArea;
+    /** Category group id → value for the booked fees */
+    categoryValues?: { [key: string]: string; };
+
+    [key: string]: any;
+
+    constructor(data?: IFeeBookingDto) {
+        if (data) {
+            for (var property in data) {
+                if (data.hasOwnProperty(property))
+                    (this as any)[property] = (data as any)[property];
+            }
+        }
+    }
+
+    init(_data?: any) {
+        if (_data) {
+            for (var property in _data) {
+                if (_data.hasOwnProperty(property))
+                    this[property] = _data[property];
+            }
+            this.bommelId = _data["bommelId"];
+            this.area = _data["area"];
+            if (_data["categoryValues"]) {
+                this.categoryValues = {} as any;
+                for (let key in _data["categoryValues"]) {
+                    if (_data["categoryValues"].hasOwnProperty(key))
+                        (this.categoryValues as any)![key] = _data["categoryValues"][key];
+                }
+            }
+        }
+    }
+
+    static fromJS(data: any): FeeBookingDto {
+        data = typeof data === 'object' ? data : {};
+        let result = new FeeBookingDto();
+        result.init(data);
+        return result;
+    }
+
+    toJSON(data?: any) {
+        data = typeof data === 'object' ? data : {};
+        for (var property in this) {
+            if (this.hasOwnProperty(property))
+                data[property] = this[property];
+        }
+        data["bommelId"] = this.bommelId;
+        data["area"] = this.area;
+        if (this.categoryValues) {
+            data["categoryValues"] = {};
+            for (let key in this.categoryValues) {
+                if (this.categoryValues.hasOwnProperty(key))
+                    (data["categoryValues"] as any)[key] = (this.categoryValues as any)[key];
+            }
+        }
+        return data;
+    }
+
+    clone(): FeeBookingDto {
+        const json = this.toJSON();
+        let result = new FeeBookingDto();
+        result.init(json);
+        return result;
+    }
+}
+
+/** Automatic booking of PayPal fees (PayPal accounts only); bommelId null turns it off */
+export interface IFeeBookingDto {
+    /** Bommel the fees are booked on; null turns automatic fee booking off */
+    bommelId?: number;
+    /** Area (Sphäre) of the booked fees, optional */
+    area?: TransactionArea;
+    /** Category group id → value for the booked fees */
+    categoryValues?: { [key: string]: string; };
+
+    [key: string]: any;
+}
+
 /** Authorisation to impersonate a member, plus the Keycloak user id to do it with */
 export class ImpersonationTicket implements IImpersonationTicket {
     /** Keycloak user id (sub) of the member to impersonate */
@@ -11990,6 +12089,8 @@ export interface ITransactionAggregateResponse {
 
     [key: string]: any;
 }
+
+export type TransactionArea = "IDEELL" | "ZWECKBETRIEB" | "VERMOEGENSVERWALTUNG" | "WIRTSCHAFTLICH" | "UNKNOWN";
 
 /** A category-group value stored on a transaction */
 export class TransactionCategoryValueResponse implements ITransactionCategoryValueResponse {

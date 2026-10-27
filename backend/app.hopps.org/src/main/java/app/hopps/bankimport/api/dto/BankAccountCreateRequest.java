@@ -29,5 +29,6 @@ public record BankAccountCreateRequest(
         String description,
         String color,
         Long defaultSchemaId,
-        Long bommelId) {
+        Long bommelId,
+        @Schema(description = "PayPal accounts only: book imported fees automatically") FeeBookingDto feeBooking) {
 }

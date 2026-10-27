@@ -59,6 +59,9 @@ public class BankImportService {
     @Inject
     ImportFileCheckService importFileCheckService;
 
+    @Inject
+    PaypalFeeBookingService paypalFeeBookingService;
+
     /**
      * Reads the uploaded file, validates the request, archives the original to S3 and enqueues a {@link BankImport}
      * record in {@code QUEUED} state. The worker will pick it up within a few seconds.
@@ -149,8 +152,9 @@ public class BankImportService {
     }
 
     /**
-     * Deletes all {@link app.hopps.bankimport.domain.BankTransaction}s of a finished import and removes the import
-     * record itself. Cannot be applied while the worker is still processing.
+     * Deletes all {@link app.hopps.bankimport.domain.BankTransaction}s of a finished import, together with the PayPal
+     * fees booked for them, and removes the import record itself. Cannot be applied while the worker is still
+     * processing.
      */
     @Transactional
     public void rollback(Long id) {
@@ -158,6 +162,7 @@ public class BankImportService {
         if (job.getStatus() == BankImportStatus.PROCESSING || job.getStatus() == BankImportStatus.QUEUED) {
             throw new BadRequestException("Cannot rollback an import that is still in progress");
         }
+        paypalFeeBookingService.deleteBookedForImport(job.getId());
         long deleted = transactionRepository.deleteByImport(job.getId());
         importRepository.delete(job);
         LOG.info("Bank import {} rolled back, removed {} transactions", id, deleted);

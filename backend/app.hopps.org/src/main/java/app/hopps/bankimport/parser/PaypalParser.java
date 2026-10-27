@@ -42,7 +42,7 @@ public final class PaypalParser {
 
     /** Shown as counterparty of the fee transactions and of rows without a name (top-ups, withdrawals). */
     public static final String PAYPAL = "PayPal";
-    static final String FEE_TYPE = "PayPal-Gebühr";
+    public static final String FEE_TYPE = "PayPal-Gebühr";
     static final String FEE_REFERENCE_SUFFIX = "-FEE";
 
     private static final Pattern GERMAN_DATE = Pattern.compile("\\d{1,2}\\.\\d{1,2}\\.\\d{4}");

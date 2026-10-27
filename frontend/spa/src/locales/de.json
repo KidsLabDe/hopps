@@ -1305,6 +1305,15 @@
                 "paypalEmailRequired": "PayPal-E-Mail-Adresse ist erforderlich",
                 "paypalEmailInvalid": "Ungültige E-Mail-Adresse",
                 "duplicatePaypalEmail": "Ein PayPal-Konto mit dieser E-Mail-Adresse existiert in der Organisation bereits"
+            },
+            "feeBooking": {
+                "enabled": "Gebühren automatisch buchen",
+                "hint": "Jede importierte PayPal-Gebühr wird als bestätigte Transaktion gebucht und muss nicht von Hand zugeordnet werden.",
+                "bommel": "Bommel für Gebühren",
+                "area": "Sphäre",
+                "noArea": "Keine Sphäre",
+                "staysDraft": "Ohne Wert für {{groups}} bleiben die Gebühren Entwürfe.",
+                "bommelRequired": "Bitte einen Bommel wählen"
             }
         },
         "toast": {

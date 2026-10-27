@@ -1295,6 +1295,15 @@
                 "paypalEmailRequired": "PayPal e-mail address is required",
                 "paypalEmailInvalid": "Invalid e-mail address",
                 "duplicatePaypalEmail": "A PayPal account with this e-mail address already exists in your organization"
+            },
+            "feeBooking": {
+                "enabled": "Book fees automatically",
+                "hint": "Every imported PayPal fee is booked as a confirmed transaction, so it does not need to be matched by hand.",
+                "bommel": "Bommel for fees",
+                "area": "Area",
+                "noArea": "No area",
+                "staysDraft": "Without a value for {{groups}} the fees stay drafts.",
+                "bommelRequired": "Please choose a bommel"
             }
         },
         "toast": {

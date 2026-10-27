@@ -1262,6 +1262,15 @@
                 "paypalEmailRequired": "L'adresse e-mail PayPal est requise",
                 "paypalEmailInvalid": "Adresse e-mail invalide",
                 "duplicatePaypalEmail": "Un compte PayPal avec cette adresse e-mail existe déjà dans votre organisation"
+            },
+            "feeBooking": {
+                "enabled": "Comptabiliser les frais automatiquement",
+                "hint": "Chaque frais PayPal importé est comptabilisé comme transaction confirmée et n'a pas besoin d'être rapproché à la main.",
+                "bommel": "Bommel pour les frais",
+                "area": "Sphère",
+                "noArea": "Aucune sphère",
+                "staysDraft": "Sans valeur pour {{groups}}, les frais restent des brouillons.",
+                "bommelRequired": "Veuillez choisir un bommel"
             }
         },
         "toast": {

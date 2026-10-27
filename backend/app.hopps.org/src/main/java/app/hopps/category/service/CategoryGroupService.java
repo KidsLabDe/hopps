@@ -71,12 +71,35 @@ public class CategoryGroupService {
         if (categoryValues == null) {
             return;
         }
+        transaction.replaceCategoryValues(validate(transaction.getBommel(), categoryValues));
+    }
 
-        Map<Long, CategoryGroup> applicable = applicableGroups(transaction.getBommel()).stream()
+    /**
+     * The entries of {@code categoryValues} that apply to the given bommel, with the same rules as
+     * {@link #validateAndApply}: entries for non-applicable groups are discarded, an invalid value fails with 400.
+     */
+    public Map<Long, String> validate(Bommel bommel, Map<Long, String> categoryValues) {
+        List<String> invalid = new ArrayList<>();
+        Map<Long, String> accepted = acceptedValues(bommel, categoryValues, invalid);
+        if (!invalid.isEmpty()) {
+            throw new BadRequestException(
+                    "Invalid category value(s) for group(s): " + String.join(", ", invalid));
+        }
+        return accepted;
+    }
+
+    /**
+     * Like {@link #validate}, but drops invalid values instead of failing; the names of their groups are added to
+     * {@code invalid}. For values stored earlier whose group may have changed since.
+     */
+    public Map<Long, String> acceptedValues(Bommel bommel, Map<Long, String> categoryValues, List<String> invalid) {
+        Map<Long, String> accepted = new java.util.HashMap<>();
+        if (categoryValues == null || categoryValues.isEmpty()) {
+            return accepted;
+        }
+        Map<Long, CategoryGroup> applicable = applicableGroups(bommel).stream()
                 .collect(Collectors.toMap(CategoryGroup::getId, g -> g));
 
-        Map<Long, String> accepted = new java.util.HashMap<>();
-        List<String> invalid = new ArrayList<>();
         for (Map.Entry<Long, String> entry : categoryValues.entrySet()) {
             Long groupId = entry.getKey();
             String value = entry.getValue();
@@ -94,13 +117,7 @@ public class CategoryGroupService {
             }
             accepted.put(groupId, value);
         }
-
-        if (!invalid.isEmpty()) {
-            throw new BadRequestException(
-                    "Invalid category value(s) for group(s): " + String.join(", ", invalid));
-        }
-
-        transaction.replaceCategoryValues(accepted);
+        return accepted;
     }
 
     /**

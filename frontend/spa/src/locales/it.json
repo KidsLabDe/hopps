@@ -1262,6 +1262,15 @@
                 "paypalEmailRequired": "L'indirizzo e-mail PayPal è obbligatorio",
                 "paypalEmailInvalid": "Indirizzo e-mail non valido",
                 "duplicatePaypalEmail": "Un conto PayPal con questo indirizzo e-mail esiste già nell'organizzazione"
+            },
+            "feeBooking": {
+                "enabled": "Registrare le commissioni automaticamente",
+                "hint": "Ogni commissione PayPal importata viene registrata come transazione confermata e non va abbinata a mano.",
+                "bommel": "Bommel per le commissioni",
+                "area": "Sfera",
+                "noArea": "Nessuna sfera",
+                "staysDraft": "Senza un valore per {{groups}} le commissioni restano bozze.",
+                "bommelRequired": "Scegliere un bommel"
             }
         },
         "toast": {

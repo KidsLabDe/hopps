@@ -103,6 +103,23 @@ public class BankTransactionMatchService {
     }
 
     /**
+     * Links a bank transaction in full to a transaction booked for it by a rule (e.g. an automatically booked PayPal
+     * fee). Runs in the import worker, outside any request, so it takes the entities instead of org-scoped ids.
+     */
+    public void addRuleMatch(BankTransaction bankTx, Transaction tx, String username) {
+        BankTransactionMatch match = new BankTransactionMatch();
+        match.setBankTransaction(bankTx);
+        match.setTransaction(tx);
+        match.setMatchedAmount(bankTx.getAmount().abs());
+        match.setAmountManual(false);
+        match.setMatchType(BankTransactionMatchType.AUTO_RULE);
+        match.setMatchedBy(username);
+        em.persist(match);
+        transactionAuditor.linked(tx, bankTx.getId(), match.getMatchedAmount(), false, false);
+        recomputeStatus(bankTx);
+    }
+
+    /**
      * A split receipt paid in one go: when the movement is exactly the receipt's amount, it pays the receipt's other
      * parts too, so they are linked right away, in part order, each with what it still needs, as far as the movement
      * reaches. Parts already covered or already linked to this movement are left alone. Nothing gets confirmed; the

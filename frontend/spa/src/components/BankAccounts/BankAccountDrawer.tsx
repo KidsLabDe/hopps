@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ApiException, BankAccountResponse, BankAccountType } from '@hopps/api-client';
-import { useEffect } from 'react';
+import { ApiException, BankAccountResponse, BankAccountType, FeeBookingDto } from '@hopps/api-client';
+import { useEffect, useState } from 'react';
 import { Resolver, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 
+import { FeeBookingFields, type FeeBookingState } from '@/components/BankAccounts/FeeBookingFields';
 import { LoadingState } from '@/components/common/LoadingState';
 import Button from '@/components/ui/Button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/Dialog';
@@ -22,6 +23,8 @@ const ACCT_COLORS = ['#9955CC', '#2E9E6B', '#2A6FDB', '#C8385A', '#B47C18', '#5B
 const IBAN_FORMAT = /^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/;
 
 const ACCOUNT_TYPES: BankAccountType[] = ['BANK', 'PAYPAL'];
+
+const NO_FEE_BOOKING: FeeBookingState = { enabled: false, bommelId: null, area: null, categoryValues: {} };
 
 /**
  * @param organizationCurrency accounts are kept in it (no conversion yet), so the IBAN has to fit it: CH/LI means CHF,
@@ -90,6 +93,21 @@ function buildSchema(t: (k: string, o?: Record<string, unknown>) => string, orga
 
 type FormValues = z.infer<ReturnType<typeof buildSchema>>;
 
+/**
+ * The fee booking to send: the settings when switched on, an empty one to switch a stored booking off (a missing
+ * bommel means off), nothing when there is nothing to change.
+ */
+function feeBookingPayload(type: BankAccountType, feeBooking: FeeBookingState, stored: boolean): FeeBookingDto | undefined {
+    if (type === 'PAYPAL' && feeBooking.enabled) {
+        return new FeeBookingDto({
+            bommelId: feeBooking.bommelId ?? undefined,
+            area: feeBooking.area ?? undefined,
+            categoryValues: feeBooking.categoryValues,
+        });
+    }
+    return stored ? new FeeBookingDto() : undefined;
+}
+
 interface BankAccountDrawerProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -133,8 +151,19 @@ export function BankAccountDrawer({ open, onOpenChange, account, onSuccess }: Ba
         },
     });
 
+    // Kept outside the form: the category values are keyed by group and edited by their own pickers.
+    const [feeBooking, setFeeBooking] = useState<FeeBookingState>(NO_FEE_BOOKING);
+    const [feeBommelError, setFeeBommelError] = useState<string>();
+
     useEffect(() => {
         if (open) {
+            const stored = account?.feeBooking;
+            setFeeBooking(
+                stored?.bommelId != null
+                    ? { enabled: true, bommelId: stored.bommelId, area: stored.area ?? null, categoryValues: { ...(stored.categoryValues ?? {}) } }
+                    : NO_FEE_BOOKING
+            );
+            setFeeBommelError(undefined);
             reset(
                 account
                     ? {
@@ -170,7 +199,17 @@ export function BankAccountDrawer({ open, onOpenChange, account, onSuccess }: Ba
         const openingBalanceDate = rest.openingBalanceDate ? new Date(rest.openingBalanceDate) : undefined;
         // Only the identifier of the account's type is sent; the type itself is fixed once the account exists.
         const identifier = type === 'PAYPAL' ? { paypalEmail } : { iban };
-        const payload = { ...rest, ...identifier, bankName: type === 'PAYPAL' ? undefined : rest.bankName, openingBalanceDate };
+        if (type === 'PAYPAL' && feeBooking.enabled && feeBooking.bommelId == null) {
+            setFeeBommelError(t('bankAccounts.form.feeBooking.bommelRequired'));
+            return;
+        }
+        const payload = {
+            ...rest,
+            ...identifier,
+            bankName: type === 'PAYPAL' ? undefined : rest.bankName,
+            openingBalanceDate,
+            feeBooking: feeBookingPayload(type, feeBooking, !!account?.feeBooking),
+        };
         try {
             const saved =
                 isEdit && account?.id
@@ -190,7 +229,8 @@ export function BankAccountDrawer({ open, onOpenChange, account, onSuccess }: Ba
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-md">
+            {/* With the fee booking of a PayPal account the form can outgrow the window, so it scrolls. */}
+            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>{isEdit ? t('bankAccounts.form.editTitle') : t('bankAccounts.form.createTitle')}</DialogTitle>
                     <p className="text-sm text-muted-foreground">{t('konten.form.subtitle')}</p>
@@ -290,6 +330,17 @@ export function BankAccountDrawer({ open, onOpenChange, account, onSuccess }: Ba
                             {errors.openingBalanceDate && <p className="text-xs text-destructive">{errors.openingBalanceDate.message}</p>}
                         </div>
                     </div>
+
+                    {isPaypal && (
+                        <FeeBookingFields
+                            value={feeBooking}
+                            onChange={(next) => {
+                                setFeeBooking(next);
+                                setFeeBommelError(undefined);
+                            }}
+                            bommelError={feeBommelError}
+                        />
+                    )}
 
                     {/* Color swatches */}
                     <div className="grid gap-1.5">

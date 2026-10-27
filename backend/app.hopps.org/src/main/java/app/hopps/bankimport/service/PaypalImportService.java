@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -48,6 +49,9 @@ public class PaypalImportService {
 
     @Inject
     BankImportService bankImportService;
+
+    @Inject
+    PaypalFeeBookingService feeBookingService;
 
     @Transactional
     public void runImport(Long importId) {
@@ -90,6 +94,7 @@ public class PaypalImportService {
             Set<String> existing = transactionRepository.findExistingDedupeHashes(account.getId(), dedupeHashes);
 
             Set<String> seenInThisImport = new HashSet<>();
+            List<BankTransaction> fees = new ArrayList<>();
             for (int i = 0; i < transactions.size(); i++) {
                 ParsedPaypalTransaction pt = transactions.get(i);
                 String hash = hashes[i];
@@ -115,6 +120,9 @@ public class PaypalImportService {
                 tx.setDedupeHash(hash);
                 tx.persist();
                 importedRows++;
+                if (PaypalParser.FEE_TYPE.equals(pt.transactionType())) {
+                    fees.add(tx);
+                }
 
                 if ((importedRows + duplicateRows) % checkpointInterval == 0) {
                     bankImportService.reportProgress(importId,
@@ -122,6 +130,8 @@ public class PaypalImportService {
                             importedRows, duplicateRows, errorRows);
                 }
             }
+
+            feeBookingService.book(account, fees, job.getImportedBy());
 
             job.setTotalRows(totalRows);
             job.setImportedRows(importedRows);

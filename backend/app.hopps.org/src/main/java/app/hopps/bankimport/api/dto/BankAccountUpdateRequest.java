@@ -25,5 +25,6 @@ public record BankAccountUpdateRequest(
         LocalDate openingBalanceDate,
         String description,
         String color,
-        Long defaultSchemaId) {
+        Long defaultSchemaId,
+        @Schema(description = "PayPal accounts only: replaces the fee booking; omit to keep it, bommelId null turns it off") FeeBookingDto feeBooking) {
 }

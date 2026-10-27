@@ -2,20 +2,26 @@ package app.hopps.bankimport.domain;
 
 import app.hopps.bommel.domain.Bommel;
 import app.hopps.organization.domain.Organization;
+import app.hopps.transaction.domain.TransactionArea;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A bank account belonging to an organization. Hangs off a {@link Bommel} (cost-center). Standard case: attached to the
@@ -75,6 +81,25 @@ public class BankAccount extends PanacheEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "defaultschema_id")
     private BankCsvSchema defaultSchema;
+
+    /**
+     * PayPal accounts only: when set, every imported PayPal fee is booked as a confirmed transaction on this bommel,
+     * with {@link #feeArea} and {@link #feeCategoryValues}. Null means fees are reconciled by hand like any movement.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "feebommel_id")
+    private Bommel feeBommel;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "feearea", length = 30)
+    private TransactionArea feeArea;
+
+    /** Category group id → value for the booked fees. */
+    @ElementCollection
+    @CollectionTable(name = "BankAccountFeeCategoryValue", joinColumns = @JoinColumn(name = "bankaccount_id"))
+    @MapKeyColumn(name = "category_group_id")
+    @Column(name = "value", nullable = false)
+    private Map<Long, String> feeCategoryValues = new HashMap<>();
 
     @Column(nullable = false)
     private boolean archived = false;
@@ -226,6 +251,38 @@ public class BankAccount extends PanacheEntity {
 
     public void setDefaultSchema(BankCsvSchema defaultSchema) {
         this.defaultSchema = defaultSchema;
+    }
+
+    public Bommel getFeeBommel() {
+        return feeBommel;
+    }
+
+    public void setFeeBommel(Bommel feeBommel) {
+        this.feeBommel = feeBommel;
+    }
+
+    public TransactionArea getFeeArea() {
+        return feeArea;
+    }
+
+    public void setFeeArea(TransactionArea feeArea) {
+        this.feeArea = feeArea;
+    }
+
+    public Map<Long, String> getFeeCategoryValues() {
+        return feeCategoryValues;
+    }
+
+    public void setFeeCategoryValues(Map<Long, String> feeCategoryValues) {
+        this.feeCategoryValues.clear();
+        if (feeCategoryValues != null) {
+            this.feeCategoryValues.putAll(feeCategoryValues);
+        }
+    }
+
+    /** Whether imported PayPal fees are booked automatically. */
+    public boolean booksFees() {
+        return isPaypal() && feeBommel != null;
     }
 
     public boolean isArchived() {

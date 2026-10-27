@@ -2,6 +2,7 @@ package app.hopps.bankimport.service;
 
 import app.hopps.bankimport.api.dto.BankAccountCreateRequest;
 import app.hopps.bankimport.api.dto.BankAccountUpdateRequest;
+import app.hopps.bankimport.api.dto.FeeBookingDto;
 import app.hopps.bankimport.domain.BankAccount;
 import app.hopps.bankimport.domain.BankAccountType;
 import app.hopps.bankimport.domain.BankCsvSchema;
@@ -9,6 +10,7 @@ import app.hopps.bankimport.repository.BankAccountRepository;
 import app.hopps.bankimport.repository.BankTransactionRepository;
 import app.hopps.bommel.domain.Bommel;
 import app.hopps.bommel.repository.BommelRepository;
+import app.hopps.category.service.CategoryGroupService;
 import app.hopps.organization.domain.Organization;
 import app.hopps.shared.security.OrganizationContext;
 import io.quarkus.security.identity.SecurityIdentity;
@@ -48,6 +50,9 @@ public class BankAccountService {
 
     @Inject
     SecurityIdentity securityIdentity;
+
+    @Inject
+    CategoryGroupService categoryGroupService;
 
     public List<BankAccount> list(boolean includeArchived) {
         return bankAccountRepository.listForCurrentOrganization(includeArchived);
@@ -123,6 +128,7 @@ public class BankAccountService {
         account.setDescription(request.description());
         account.setColor(request.color());
         account.setDefaultSchema(defaultSchema);
+        applyFeeBooking(account, request.feeBooking());
         account.setCreatedBy(securityIdentity.getPrincipal().getName());
 
         bankAccountRepository.persist(account);
@@ -192,7 +198,31 @@ public class BankAccountService {
         if (request.defaultSchemaId() != null) {
             account.setDefaultSchema(resolveDefaultSchema(request.defaultSchemaId()));
         }
+        applyFeeBooking(account, request.feeBooking());
         return account;
+    }
+
+    /**
+     * Replaces the fee booking of a PayPal account; null leaves it as it is, a null bommel turns it off. The category
+     * values must fit the fee bommel, like those of a transaction on it.
+     */
+    private void applyFeeBooking(BankAccount account, FeeBookingDto feeBooking) {
+        if (feeBooking == null) {
+            return;
+        }
+        if (feeBooking.bommelId() == null) {
+            account.setFeeBommel(null);
+            account.setFeeArea(null);
+            account.setFeeCategoryValues(null);
+            return;
+        }
+        if (!account.isPaypal()) {
+            throw new BadRequestException("Only a PayPal account books its fees automatically");
+        }
+        Bommel bommel = resolveBommel(feeBooking.bommelId(), account.getOrganization());
+        account.setFeeBommel(bommel);
+        account.setFeeArea(feeBooking.area());
+        account.setFeeCategoryValues(categoryGroupService.validate(bommel, feeBooking.categoryValues()));
     }
 
     @Transactional
